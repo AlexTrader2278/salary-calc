@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Калькулятор зарплаты</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1419">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Зарплата">
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a212b;
+    --panel-2: #222c38;
+    --line: #2e3a48;
+    --text: #e6edf3;
+    --muted: #8b98a8;
+    --accent: #4ea1ff;
+    --good: #43c98a;
+    --warn: #e0b341;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 0 10px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .field input, .field select {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--text); padding: 9px 10px; font-size: 15px; font-variant-numeric: tabular-nums;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  table.calc { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.calc td { padding: 7px 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  table.calc td:last-child { text-align: right; white-space: nowrap; }
+  table.calc tr.sub td { color: var(--muted); font-size: 12px; padding-top: 4px; padding-bottom: 4px; }
+  table.calc tr.sum td { font-weight: 700; color: var(--accent); padding-top: 10px; padding-bottom: 10px; border-top: 1px solid var(--line); border-bottom: none; }
+  table.calc tr.minus td { color: var(--warn); }
+  table.calc tr.total td { font-weight: 700; font-size: 18px; color: var(--good); padding-top: 12px; padding-bottom: 12px; border-top: 2px solid var(--good); border-bottom: none; }
+  table.calc tr.zero td { color: var(--muted); opacity: .55; }
+
+  .ftr { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Калькулятор зарплаты</h1>
+  <div class="sub">Северная вахта · производственный календарь 2026. Все расчёты только на этом устройстве.</div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2 style="margin-top:0">Оклад и календарь</h2>
+        <div class="inputs">
+          <div class="field">
+            <label>Месяц</label>
+            <select id="month"></select>
+          </div>
+          <div class="field">
+            <label>Годовая норма часов</label>
+            <input id="annualNormHours" type="number" step="1" value="1986" />
+            <div class="hint">2025 = 1972, 2026 = 1986</div>
+          </div>
+          <div class="field">
+            <label>Оклад, руб</label>
+            <input id="oklad" type="number" step="1" placeholder="напр. 45000" />
+          </div>
+        </div>
+      </div>
+
+      <h2>Отработанное время</h2>
+      <div class="panel">
+        <div class="inputs">
+          <div class="field">
+            <label>Всего часов отработано</label>
+            <input id="hoursWorked" type="number" step="0.01" />
+          </div>
+          <div class="field">
+            <label>В т.ч. ночных часов</label>
+            <input id="hoursNight" type="number" step="0.01" />
+          </div>
+          <div class="field">
+            <label>Праздничные часы (день)</label>
+            <input id="hoursHoliday" type="number" step="0.01" />
+          </div>
+        </div>
+      </div>
+
+      <h2>Надбавки и доплаты</h2>
+      <div class="panel">
+        <div class="inputs">
+          <div class="field">
+            <label>Проф. мастерство, %</label>
+            <input id="pctProfMast" type="number" step="1" value="0" />
+            <div class="hint">0…30</div>
+          </div>
+          <div class="field">
+            <label>Вредность, %</label>
+            <input id="pctVred" type="number" step="1" value="6" />
+            <div class="hint">по СОУТ</div>
+          </div>
+          <div class="field">
+            <label>Ежемесячная премия, %</label>
+            <input id="pctPremia" type="number" step="1" value="30" />
+            <div class="hint">рабочие 30, специалисты 45</div>
+          </div>
+          <div class="field">
+            <label>Районный коэф.</label>
+            <input id="rk" type="number" step="0.01" value="1.7" />
+          </div>
+          <div class="field">
+            <label>Северная надбавка, %</label>
+            <input id="sn" type="number" step="1" value="80" />
+          </div>
+        </div>
+      </div>
+
+      <h2>Вахта, дорога, отпуск</h2>
+      <div class="panel">
+        <div class="inputs">
+          <div class="field">
+            <label>Дней на вахте</label>
+            <input id="daysVahta" type="number" step="1" />
+            <div class="hint">400 руб/день (без НДФЛ)</div>
+          </div>
+          <div class="field">
+            <label>Дней в пути (дорога)</label>
+            <input id="daysDoroga" type="number" step="1" />
+          </div>
+          <div class="field">
+            <label>Дней отпуска</label>
+            <input id="daysOtpusk" type="number" step="1" />
+          </div>
+          <div class="field">
+            <label>Средний заработок (для отпуска)</label>
+            <input id="averageSalary" type="number" step="0.01" placeholder="напр. 6442.24" />
+            <div class="hint">руб/день, из бухпрограммы</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Налог</h2>
+      <div class="panel">
+        <div class="inputs">
+          <div class="field">
+            <label>НДФЛ, %</label>
+            <input id="ndfl" type="number" step="0.1" value="13" />
+            <div class="hint">с 2025: 13 / 15 / 18 / 20 / 22</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h2 style="margin-top:0">Расчёт</h2>
+      <div class="panel">
+        <table class="calc" id="result"></table>
+      </div>
+
+      <h2>Как считается</h2>
+      <div class="panel" style="font-size:13px; color:var(--muted); line-height:1.55">
+        <div><b style="color:var(--text)">Стоимость часа</b> = оклад × 12 / годовая норма часов.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">База надбавок</b> (проф. маст., вредность) = оклад за факт. часы + праздничные.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. + ночные + праздничные + проф. маст. + вредность.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии вместе с самой премией. Вахта и дорога — отдельно, на них РК/СН не идёт.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ не облагается.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ftr">оффлайн, ничего не отправляется в сеть · можно сохранить файл и открыть с флешки или с телефона</div>
+</div>
+
+<script>
+// Производственный календарь 2026 (5-дневная рабочая неделя, 40 ч/нед)
+const CAL_2026 = [
+  { m: "Январь",   days: 17, hours: 136 },
+  { m: "Февраль",  days: 19, hours: 151 },
+  { m: "Март",     days: 21, hours: 168 },
+  { m: "Апрель",   days: 22, hours: 175 },
+  { m: "Май",      days: 18, hours: 143 },
+  { m: "Июнь",     days: 21, hours: 167 },
+  { m: "Июль",     days: 23, hours: 184 },
+  { m: "Август",   days: 21, hours: 168 },
+  { m: "Сентябрь", days: 22, hours: 176 },
+  { m: "Октябрь",  days: 22, hours: 176 },
+  { m: "Ноябрь",   days: 20, hours: 159 },
+  { m: "Декабрь",  days: 23, hours: 183 },
+];
+const ANNUAL_HOURS_2026 = CAL_2026.reduce((s, x) => s + x.hours, 0); // 1986
+const ANNUAL_DAYS_2026  = CAL_2026.reduce((s, x) => s + x.days,  0); // 249
+
+const KEY = "salary-calc-v2";
+const $ = (id) => document.getElementById(id);
+
+const inputIds = ["month","annualNormHours","oklad","hoursWorked","hoursNight","hoursHoliday",
+  "pctProfMast","pctVred","pctPremia","rk","sn",
+  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl"];
+
+function initMonth() {
+  const sel = $("month");
+  CAL_2026.forEach((m, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = `${m.m} 2026 (${m.days} дн / ${m.hours} ч)`;
+    sel.appendChild(o);
+  });
+  const now = new Date();
+  sel.value = (now.getFullYear() === 2026) ? now.getMonth() : 0;
+}
+
+function num(id) {
+  const v = parseFloat($(id).value);
+  return isNaN(v) ? 0 : v;
+}
+
+function fmt(n) {
+  if (!isFinite(n) || n === 0) return "0,00";
+  return n.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calc() {
+  const oklad = num("oklad");
+  const annualNorm = num("annualNormHours") || ANNUAL_HOURS_2026;
+  const hoursWorked  = num("hoursWorked");
+  const hoursNight   = num("hoursNight");
+  const hoursHoliday = num("hoursHoliday");
+
+  const pctPM = num("pctProfMast");
+  const pctVr = num("pctVred");
+  const pctPr = num("pctPremia");
+
+  const rk = num("rk");          // 1.7 → коэффициент (доплата 0.7)
+  const sn = num("sn") / 100;    // 80 → 0.8
+
+  const daysVahta  = num("daysVahta");
+  const daysDoroga = num("daysDoroga");
+  const daysOtpusk = num("daysOtpusk");
+  const avgSalary  = num("averageSalary");
+
+  const ndfl = num("ndfl") / 100;
+
+  // Стоимость часа — по годовой норме
+  const hourRate = oklad * 12 / annualNorm;
+
+  const okladFact  = hourRate * hoursWorked;        // оклад за факт. часы
+  const nightPay   = hourRate * hoursNight * 0.40;  // доплата за ночные 40 %
+  const holidayPay = hourRate * hoursHoliday * 1.0; // доплата за праздничные днём 100 %
+
+  // База надбавок (проф. мастерство, вредность)
+  const baseNadbavki = okladFact + holidayPay;
+  const profMast = baseNadbavki * pctPM / 100;
+  const vrednost = baseNadbavki * pctVr / 100;
+
+  // База ежемесячной премии
+  const basePremia = okladFact + nightPay + holidayPay + profMast + vrednost;
+  const premia = basePremia * pctPr / 100;
+
+  // База РК/СН
+  const baseRkSn = basePremia + premia;
+  const rkSum = baseRkSn * (rk - 1);
+  const snSum = baseRkSn * sn;
+
+  // Вахта и дорога — без РК/СН
+  const vahtaSum  = 400 * daysVahta;
+  const dayRate   = oklad * 12 / ANNUAL_DAYS_2026;
+  const dorogaSum = dayRate * daysDoroga;
+
+  // Отпуск (по среднему заработку)
+  const otpuskSum = avgSalary * daysOtpusk;
+
+  // Итого начислено
+  const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
+
+  // НДФЛ — со всего, кроме вахты (компенсация, не облагается)
+  const ndflBase = nachisleno - vahtaSum;
+  const ndflSum  = ndflBase * ndfl;
+
+  const kVyplate = nachisleno - ndflSum;
+
+  // вывод
+  const rows = [];
+  const push = (label, val, cls = "") => rows.push({ label, val, cls });
+
+  push("Стоимость часа", `${fmt(hourRate)} руб`, "sub");
+  push("Оклад за факт. часы", `${fmt(okladFact)}  (${hoursWorked} ч)`);
+  if (hoursNight)   push(`Доплата за ночные (40 %)`, fmt(nightPay));
+  if (hoursHoliday) push(`Доплата за праздн. днём`,  fmt(holidayPay));
+  if (profMast)     push(`Проф. мастерство (${pctPM} %)`, fmt(profMast));
+  if (vrednost)     push(`Вредность (${pctVr} %)`, fmt(vrednost));
+  if (premia)       push(`Ежемесячная премия (${pctPr} %)`, fmt(premia));
+  push("База для РК и СН", fmt(baseRkSn), "sum");
+  if (rkSum)        push(`Районный коэффициент (×${rk})`, fmt(rkSum));
+  if (snSum)        push(`Северная надбавка (${(sn*100).toFixed(0)} %)`, fmt(snSum));
+  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dayRate)})`, fmt(dorogaSum));
+  if (otpuskSum)    push(`Отпускные (${daysOtpusk} дн × ${fmt(avgSalary)})`, fmt(otpuskSum));
+  if (vahtaSum)     push(`Надбавка вахтового метода (${daysVahta} × 400)`, fmt(vahtaSum));
+  push("Итого начислено", fmt(nachisleno), "sum");
+  push(`НДФЛ (${(ndfl*100).toFixed(1)} %)`, "−" + fmt(ndflSum), "minus");
+  push("К выплате на руки", fmt(kVyplate), "total");
+
+  $("result").innerHTML = rows.map(r => {
+    const isZero = (typeof r.val === "string" && /^0,00/.test(r.val)) ? " zero" : "";
+    return `<tr class="${r.cls}${isZero}"><td>${r.label}</td><td>${r.val}</td></tr>`;
+  }).join("");
+}
+
+function save() {
+  const data = {};
+  inputIds.forEach(id => { data[id] = $(id).value; });
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    inputIds.forEach(id => { if (id in data) $(id).value = data[id]; });
+  } catch (e) {}
+}
+
+let lastMonth = -1;
+function onMonthChange() {
+  const i = +$("month").value;
+  if (i !== lastMonth) {
+    $("hoursWorked").value = CAL_2026[i].hours; // подставляем норму месяца
+    lastMonth = i;
+  }
+}
+
+function onAny(e) {
+  if (e && e.target && e.target.id === "month") onMonthChange();
+  calc();
+  save();
+}
+
+// init
+initMonth();
+load();
+if (!$("hoursWorked").value) $("hoursWorked").value = CAL_2026[+$("month").value].hours;
+lastMonth = +$("month").value;
+calc();
+
+inputIds.forEach(id => {
+  const el = $(id);
+  el.addEventListener("input", onAny);
+  el.addEventListener("change", onAny);
+});
+
+// регистрация service worker для офлайна (только по http/https, не file://)
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
