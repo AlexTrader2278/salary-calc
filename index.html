@@ -63,20 +63,21 @@
   <div class="grid">
     <div>
       <div class="panel">
-        <h2 style="margin-top:0">Оклад и календарь</h2>
+        <h2 style="margin-top:0">Оклад и норма</h2>
         <div class="inputs">
           <div class="field">
             <label>Месяц</label>
             <select id="month"></select>
+            <div class="hint" id="monthNormHint">&nbsp;</div>
           </div>
           <div class="field">
-            <label>Годовая норма часов</label>
-            <input id="annualNormHours" type="number" step="1" value="1986" />
-            <div class="hint">2025 = 1972, 2026 = 1986</div>
+            <label>Норма времени, ч/мес</label>
+            <input id="normMonth" type="number" step="0.01" value="164.34" />
+            <div class="hint">поле «Норма времени» в расчётке (≈164,33)</div>
           </div>
           <div class="field">
             <label>Оклад, руб</label>
-            <input id="oklad" type="number" step="1" placeholder="напр. 45000" />
+            <input id="oklad" type="number" step="1" placeholder="напр. 36254" />
           </div>
         </div>
       </div>
@@ -87,14 +88,17 @@
           <div class="field">
             <label>Всего часов отработано</label>
             <input id="hoursWorked" type="number" step="0.01" />
+            <div class="hint">все часы за месяц (ночные и праздничные тоже сюда входят)</div>
           </div>
           <div class="field">
             <label>В т.ч. ночных часов</label>
             <input id="hoursNight" type="number" step="0.01" />
+            <div class="hint">часть от «всего», доплата +40 %</div>
           </div>
           <div class="field">
-            <label>Праздничные часы (день)</label>
+            <label>В т.ч. праздничных (день)</label>
             <input id="hoursHoliday" type="number" step="0.01" />
+            <div class="hint">часть от «всего», доплата +100 %</div>
           </div>
         </div>
       </div>
@@ -172,11 +176,12 @@
 
       <h2>Как считается</h2>
       <div class="panel" style="font-size:13px; color:var(--muted); line-height:1.55">
-        <div><b style="color:var(--text)">Стоимость часа</b> = оклад × 12 / годовая норма часов.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">База надбавок</b> (проф. маст., вредность) = оклад за факт. часы + праздничные.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. + ночные + праздничные + проф. маст. + вредность.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии вместе с самой премией. Вахта и дорога — отдельно, на них РК/СН не идёт.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ не облагается.</div>
+        <div><b style="color:var(--text)">Стоимость часа</b> = оклад / норма времени (поле «Норма времени» из расчётки, ≈164,33 ч).</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии (вместе с премией) и на компенсацию пути.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за каждый день дороги.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ не облагается и РК/СН не идёт.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Отпускные</b> = средний заработок × дни (РК/СН уже внутри среднего).</div>
       </div>
     </div>
   </div>
@@ -206,7 +211,7 @@ const ANNUAL_DAYS_2026  = CAL_2026.reduce((s, x) => s + x.days,  0); // 249
 const KEY = "salary-calc-v2";
 const $ = (id) => document.getElementById(id);
 
-const inputIds = ["month","annualNormHours","oklad","hoursWorked","hoursNight","hoursHoliday",
+const inputIds = ["month","normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
   "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl"];
 
@@ -233,7 +238,7 @@ function fmt(n) {
 
 function calc() {
   const oklad = num("oklad");
-  const annualNorm = num("annualNormHours") || ANNUAL_HOURS_2026;
+  const normMonth = num("normMonth") || 164.34;  // среднемес. норма часов (делитель часовой ставки)
   const hoursWorked  = num("hoursWorked");
   const hoursNight   = num("hoursNight");
   const hoursHoliday = num("hoursHoliday");
@@ -252,8 +257,8 @@ function calc() {
 
   const ndfl = num("ndfl") / 100;
 
-  // Стоимость часа — по годовой норме
-  const hourRate = oklad * 12 / annualNorm;
+  // Стоимость часа = оклад / среднемесячная норма часов (как в расчётке: «Норма времени»)
+  const hourRate = oklad / normMonth;
 
   const okladFact  = hourRate * hoursWorked;        // оклад за факт. часы
   const nightPay   = hourRate * hoursNight * 0.40;  // доплата за ночные 40 %
@@ -268,21 +273,23 @@ function calc() {
   const basePremia = okladFact + nightPay + holidayPay + profMast + vrednost;
   const premia = basePremia * pctPr / 100;
 
-  // База РК/СН
-  const baseRkSn = basePremia + premia;
+  // Компенсация пути (дорога): за день = часовая ставка × 8 (проверено на расчётках)
+  const dorogaPerDay = hourRate * 8;
+  const dorogaSum = dorogaPerDay * daysDoroga;
+
+  // База РК/СН: премиальная база + премия + компенсация пути (РК/СН на дорогу начисляется)
+  const baseRkSn = basePremia + premia + dorogaSum;
   const rkSum = baseRkSn * (rk - 1);
   const snSum = baseRkSn * sn;
 
-  // Вахта и дорога — без РК/СН
+  // Вахта — компенсация: без РК/СН и без НДФЛ
   const vahtaSum  = 400 * daysVahta;
-  const dayRate   = oklad * 12 / ANNUAL_DAYS_2026;
-  const dorogaSum = dayRate * daysDoroga;
 
-  // Отпуск (по среднему заработку)
+  // Отпуск — по среднему заработку (РК/СН уже внутри среднего, повторно не начисляем)
   const otpuskSum = avgSalary * daysOtpusk;
 
   // Итого начислено
-  const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
+  const nachisleno = baseRkSn + rkSum + snSum + otpuskSum + vahtaSum;
 
   // НДФЛ — со всего, кроме вахты (компенсация, не облагается)
   const ndflBase = nachisleno - vahtaSum;
@@ -301,10 +308,10 @@ function calc() {
   if (profMast)     push(`Проф. мастерство (${pctPM} %)`, fmt(profMast));
   if (vrednost)     push(`Вредность (${pctVr} %)`, fmt(vrednost));
   if (premia)       push(`Ежемесячная премия (${pctPr} %)`, fmt(premia));
+  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dorogaPerDay)})`, fmt(dorogaSum));
   push("База для РК и СН", fmt(baseRkSn), "sum");
   if (rkSum)        push(`Районный коэффициент (×${rk})`, fmt(rkSum));
   if (snSum)        push(`Северная надбавка (${(sn*100).toFixed(0)} %)`, fmt(snSum));
-  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dayRate)})`, fmt(dorogaSum));
   if (otpuskSum)    push(`Отпускные (${daysOtpusk} дн × ${fmt(avgSalary)})`, fmt(otpuskSum));
   if (vahtaSum)     push(`Надбавка вахтового метода (${daysVahta} × 400)`, fmt(vahtaSum));
   push("Итого начислено", fmt(nachisleno), "sum");
@@ -332,17 +339,14 @@ function load() {
   } catch (e) {}
 }
 
-let lastMonth = -1;
-function onMonthChange() {
+function updateMonthHint() {
   const i = +$("month").value;
-  if (i !== lastMonth) {
-    $("hoursWorked").value = CAL_2026[i].hours; // подставляем норму месяца
-    lastMonth = i;
-  }
+  const m = CAL_2026[i];
+  $("monthNormHint").textContent = `норма календаря: ${m.hours} ч / ${m.days} дн`;
 }
 
-function onAny(e) {
-  if (e && e.target && e.target.id === "month") onMonthChange();
+function onAny() {
+  updateMonthHint();
   calc();
   save();
 }
@@ -350,8 +354,7 @@ function onAny(e) {
 // init
 initMonth();
 load();
-if (!$("hoursWorked").value) $("hoursWorked").value = CAL_2026[+$("month").value].hours;
-lastMonth = +$("month").value;
+updateMonthHint();
 calc();
 
 inputIds.forEach(id => {

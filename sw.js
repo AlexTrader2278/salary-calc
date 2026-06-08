@@ -1,5 +1,5 @@
 // Простой офлайн-кэш. Бамп версии при изменении файлов.
-const CACHE = "salary-calc-v2";
+const CACHE = "salary-calc-v3";
 const ASSETS = [
   "./",
   "./index.html",
