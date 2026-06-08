@@ -61,7 +61,7 @@
 <body>
 <div class="wrap">
   <h1>Калькулятор зарплаты</h1>
-  <div class="sub">Северная вахта · производственный календарь 2026. Все расчёты только на этом устройстве.</div>
+  <div class="sub">Северная вахта · расчёт по своей расчётке. Все расчёты только на этом устройстве.</div>
 
   <div class="grid">
     <div>
@@ -69,18 +69,13 @@
         <h2 style="margin-top:0">Оклад и норма</h2>
         <div class="inputs">
           <div class="field">
-            <label>Месяц</label>
-            <select id="month"></select>
-            <div class="hint" id="monthNormHint">&nbsp;</div>
+            <label>Оклад, руб</label>
+            <input id="oklad" type="number" step="1" placeholder="напр. 36254" />
           </div>
           <div class="field">
             <label>Норма времени, ч/мес</label>
             <input id="normMonth" type="number" step="0.01" value="164.34" />
             <div class="hint">поле «Норма времени» в расчётке (≈164,33)</div>
-          </div>
-          <div class="field">
-            <label>Оклад, руб</label>
-            <input id="oklad" type="number" step="1" placeholder="напр. 36254" />
           </div>
         </div>
       </div>
@@ -194,41 +189,12 @@
 </div>
 
 <script>
-// Производственный календарь 2026 (5-дневная рабочая неделя, 40 ч/нед)
-const CAL_2026 = [
-  { m: "Январь",   days: 17, hours: 136 },
-  { m: "Февраль",  days: 19, hours: 151 },
-  { m: "Март",     days: 21, hours: 168 },
-  { m: "Апрель",   days: 22, hours: 175 },
-  { m: "Май",      days: 18, hours: 143 },
-  { m: "Июнь",     days: 21, hours: 167 },
-  { m: "Июль",     days: 23, hours: 184 },
-  { m: "Август",   days: 21, hours: 168 },
-  { m: "Сентябрь", days: 22, hours: 176 },
-  { m: "Октябрь",  days: 22, hours: 176 },
-  { m: "Ноябрь",   days: 20, hours: 159 },
-  { m: "Декабрь",  days: 23, hours: 183 },
-];
-const ANNUAL_HOURS_2026 = CAL_2026.reduce((s, x) => s + x.hours, 0); // 1986
-const ANNUAL_DAYS_2026  = CAL_2026.reduce((s, x) => s + x.days,  0); // 249
-
 const KEY = "salary-calc-v2";
 const $ = (id) => document.getElementById(id);
 
-const inputIds = ["month","normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
+const inputIds = ["normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
   "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl"];
-
-function initMonth() {
-  const sel = $("month");
-  CAL_2026.forEach((m, i) => {
-    const o = document.createElement("option");
-    o.value = i; o.textContent = `${m.m} 2026 (${m.days} дн / ${m.hours} ч)`;
-    sel.appendChild(o);
-  });
-  const now = new Date();
-  sel.value = (now.getFullYear() === 2026) ? now.getMonth() : 0;
-}
 
 function num(id) {
   const v = parseFloat($(id).value);
@@ -343,22 +309,13 @@ function load() {
   } catch (e) {}
 }
 
-function updateMonthHint() {
-  const i = +$("month").value;
-  const m = CAL_2026[i];
-  $("monthNormHint").textContent = `норма календаря: ${m.hours} ч / ${m.days} дн`;
-}
-
 function onAny() {
-  updateMonthHint();
   calc();
   save();
 }
 
 // init
-initMonth();
 load();
-updateMonthHint();
 calc();
 
 inputIds.forEach(id => {
