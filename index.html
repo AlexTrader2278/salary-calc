@@ -176,8 +176,8 @@
       <div class="panel" style="font-size:13px; color:var(--muted); line-height:1.55">
         <div><b style="color:var(--text)">Стоимость часа</b> = оклад / норма времени (поле «Норма времени» из расчётки, ≈164,33 ч).</div>
         <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии (вместе с премией) и на компенсацию пути.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за каждый день дороги.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии вместе с премией.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН на неё не идёт, НДФЛ — да.</div>
         <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ не облагается и РК/СН не идёт.</div>
         <div style="margin-top:8px"><b style="color:var(--text)">Отпускные</b> = средний заработок × дни (РК/СН уже внутри среднего).</div>
       </div>
@@ -243,14 +243,15 @@ function calc() {
   const basePremia = okladFact + nightPay + holidayPay + profMast + vrednost;
   const premia = basePremia * pctPr / 100;
 
-  // Компенсация пути (дорога): за день = часовая ставка × 8 (проверено на расчётках)
-  const dorogaPerDay = hourRate * 8;
-  const dorogaSum = dorogaPerDay * daysDoroga;
-
-  // База РК/СН: премиальная база + премия + компенсация пути (РК/СН на дорогу начисляется)
-  const baseRkSn = basePremia + premia + dorogaSum;
+  // База РК/СН: премиальная база + премия (компенсация пути сюда НЕ входит)
+  const baseRkSn = basePremia + premia;
   const rkSum = baseRkSn * (rk - 1);
   const snSum = baseRkSn * sn;
+
+  // Компенсация пути (дорога): за день = часовая ставка × 8.
+  // РК/СН на неё НЕ начисляется (проверено на фев/апр Хаязова), но НДФЛ облагается.
+  const dorogaPerDay = hourRate * 8;
+  const dorogaSum = dorogaPerDay * daysDoroga;
 
   // Вахта — компенсация: без РК/СН и без НДФЛ
   const vahtaSum  = 400 * daysVahta;
@@ -259,7 +260,7 @@ function calc() {
   const otpuskSum = avgSalary * daysOtpusk;
 
   // Итого начислено
-  const nachisleno = baseRkSn + rkSum + snSum + otpuskSum + vahtaSum;
+  const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
 
   // НДФЛ — со всего, кроме вахты (компенсация, не облагается)
   const ndflBase = nachisleno - vahtaSum;
@@ -278,10 +279,10 @@ function calc() {
   if (profMast)     push(`Проф. мастерство (${pctPM} %)`, fmt(profMast));
   if (vrednost)     push(`Вредность (${pctVr} %)`, fmt(vrednost));
   if (premia)       push(`Ежемесячная премия (${pctPr} %)`, fmt(premia));
-  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dorogaPerDay)})`, fmt(dorogaSum));
   push("База для РК и СН", fmt(baseRkSn), "sum");
   if (rkSum)        push(`Районный коэффициент (×${rk})`, fmt(rkSum));
   if (snSum)        push(`Северная надбавка (${(sn*100).toFixed(0)} %)`, fmt(snSum));
+  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dorogaPerDay)})`, fmt(dorogaSum));
   if (otpuskSum)    push(`Отпускные (${daysOtpusk} дн × ${fmt(avgSalary)})`, fmt(otpuskSum));
   if (vahtaSum)     push(`Надбавка вахтового метода (${daysVahta} × 400)`, fmt(vahtaSum));
   push("Итого начислено", fmt(nachisleno), "sum");
