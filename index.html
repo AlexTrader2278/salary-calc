@@ -160,7 +160,12 @@
           <div class="field">
             <label>НДФЛ, %</label>
             <input id="ndfl" type="number" step="0.1" value="13" />
-            <div class="hint">с 2025: 13 / 15 / 18 / 20 / 22</div>
+            <div class="hint">в начале года 13 % (северные — отдельная льготная шкала)</div>
+          </div>
+          <div class="field">
+            <label>Вычет на детей, ₽/мес</label>
+            <input id="childDed" type="number" step="1" value="0" />
+            <div class="hint">1 реб. 1400, 2-й 2800, 3-й 6000</div>
           </div>
         </div>
       </div>
@@ -177,9 +182,10 @@
         <div><b style="color:var(--text)">Стоимость часа</b> = оклад / норма времени (поле «Норма времени» из расчётки, ≈164,33 ч).</div>
         <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
         <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии вместе с премией.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН на неё не идёт, НДФЛ — да.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ не облагается и РК/СН не идёт.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН и НДФЛ на неё не идут.</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ и РК/СН не идут.</div>
         <div style="margin-top:8px"><b style="color:var(--text)">Отпускные</b> = средний заработок × дни (РК/СН уже внутри среднего).</div>
+        <div style="margin-top:8px"><b style="color:var(--text)">НДФЛ</b> = (начислено − вахта − дорога − вычет на детей) × ставку.</div>
       </div>
     </div>
   </div>
@@ -194,7 +200,7 @@ const $ = (id) => document.getElementById(id);
 
 const inputIds = ["normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
-  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl"];
+  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl","childDed"];
 
 function num(id) {
   const v = parseFloat($(id).value);
@@ -226,6 +232,7 @@ function calc() {
   const avgSalary  = num("averageSalary");
 
   const ndfl = num("ndfl") / 100;
+  const childDed = num("childDed");   // вычет на детей, руб/мес
 
   // Стоимость часа = оклад / среднемесячная норма часов (как в расчётке: «Норма времени»)
   const hourRate = oklad / normMonth;
@@ -262,8 +269,9 @@ function calc() {
   // Итого начислено
   const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
 
-  // НДФЛ — со всего, кроме вахты (компенсация, не облагается)
-  const ndflBase = nachisleno - vahtaSum;
+  // НДФЛ = (начислено − вахта − дорога − вычет на детей) × ставка.
+  // Вахта и компенсация пути НДФЛ не облагаются (проверено на 4 расчётках Хаязова).
+  const ndflBase = Math.max(0, nachisleno - vahtaSum - dorogaSum - childDed);
   const ndflSum  = ndflBase * ndfl;
 
   const kVyplate = nachisleno - ndflSum;
