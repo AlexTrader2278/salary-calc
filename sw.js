@@ -1,5 +1,6 @@
-// Простой офлайн-кэш. Бамп версии при изменении файлов.
-const CACHE = "salary-calc-v3";
+// Кэш: страница (HTML) — "сначала сеть" (всегда свежая онлайн, офлайн из кэша),
+// статика (иконки, манифест) — "из кэша". Бамп версии при изменении файлов.
+const CACHE = "salary-calc-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -21,10 +22,26 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// cache-first: приложение полностью офлайн
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
-  e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request))
-  );
+  const req = e.request;
+  if (req.method !== "GET") return;
+
+  const isDoc = req.mode === "navigate" || req.destination === "document";
+
+  if (isDoc) {
+    // сначала сеть, при успехе обновляем кэш; офлайн — отдаём из кэша
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put("./index.html", copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((hit) => hit || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // статика — сначала кэш
+  e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
 });

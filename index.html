@@ -53,6 +53,9 @@
   table.calc tr.zero td { color: var(--muted); opacity: .55; }
 
   .ftr { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
+  .sign { text-align: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sign a, .sign span { color: var(--accent); font-size: 13px; letter-spacing: .08em; font-weight: 600; text-decoration: none; }
+  .sign .by { color: var(--muted); font-weight: 400; letter-spacing: .04em; }
 </style>
 </head>
 <body>
@@ -187,6 +190,7 @@
   </div>
 
   <div class="ftr">оффлайн, ничего не отправляется в сеть · можно сохранить файл и открыть с флешки или с телефона</div>
+  <div class="sign"><span class="by">by</span> <span>Aleksey Kolesnikov</span></div>
 </div>
 
 <script>
