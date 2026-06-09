@@ -20,15 +20,28 @@
     --glow:#16203a; --tabbar:rgba(13,19,34,.92); --shadow:rgba(0,0,0,0);
     --r:18px;
   }
+  /* Светлая тема — неоморфизм (soft UI): фон и элементы одного цвета, мягкие тени */
   html[data-theme="light"]{
-    --bg:#eef2f8; --bg2:#e4eaf3;
-    --panel:#ffffff; --panel2:#f3f6fb; --line:#dde3ec;
-    --text:#18212f; --muted:#5c6678; --faint:#9aa4b5;
-    --accent:#3b6fff; --accent2:#2f5fe0; --accentdim:rgba(59,111,255,.12);
-    --good:#15a85b; --warn:#bd821a; --bad:#e0503f;
-    --glow:#dbe6fb; --tabbar:rgba(255,255,255,.9); --shadow:rgba(20,40,90,.06);
+    --bg:#e4e9f1; --bg2:#e4e9f1;
+    --panel:#e4e9f1; --panel2:#e4e9f1; --line:#d3dae6;
+    --text:#3a4256; --muted:#79839a; --faint:#a6aebf;
+    --accent:#4e7fff; --accent2:#3b6fe6; --accentdim:rgba(78,127,255,.16);
+    --good:#1fa564; --warn:#c08418; --bad:#e0503f;
+    --glow:#eef2f8; --tabbar:#e4e9f1;
+    --neuL:#ffffff; --neuD:#c4ccdb;
   }
-  .card{box-shadow:0 1px 3px var(--shadow)}
+  html[data-theme="light"] .card{border:none; box-shadow:6px 6px 14px var(--neuD), -6px -6px 14px var(--neuL)}
+  html[data-theme="light"] .field input, html[data-theme="light"] .field select, html[data-theme="light"] .nrow input{
+    border:none; box-shadow:inset 3px 3px 6px var(--neuD), inset -3px -3px 6px var(--neuL)}
+  html[data-theme="light"] .field input:focus, html[data-theme="light"] .field select:focus, html[data-theme="light"] .nrow input:focus{
+    box-shadow:inset 3px 3px 6px var(--neuD), inset -3px -3px 6px var(--neuL), 0 0 0 2px var(--accentdim)}
+  html[data-theme="light"] .ico{background:var(--bg); box-shadow:3px 3px 7px var(--neuD), -3px -3px 7px var(--neuL)}
+  html[data-theme="light"] .gear{border:none; box-shadow:4px 4px 9px var(--neuD), -4px -4px 9px var(--neuL)}
+  html[data-theme="light"] .nrow{border-top-color:rgba(120,130,150,.12)}
+  html[data-theme="light"] .btn{box-shadow:5px 5px 13px var(--neuD), -5px -5px 13px var(--neuL)}
+  html[data-theme="light"] .tabbar{border-top:none; box-shadow:0 -4px 16px rgba(120,130,150,.18)}
+  html[data-theme="light"] .payout{border:none; background:var(--bg); box-shadow:5px 5px 13px var(--neuD), -5px -5px 13px var(--neuL)}
+  html[data-theme="light"] table.calc td{border-bottom-color:rgba(120,130,150,.13)}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{
@@ -395,7 +408,7 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   $('themeLabel').textContent = (t==='light') ? 'Светлая' : 'Тёмная';
   const meta = document.querySelector('meta[name=theme-color]');
-  if(meta) meta.setAttribute('content', t==='light' ? '#eef2f8' : '#0a0e1a');
+  if(meta) meta.setAttribute('content', t==='light' ? '#e4e9f1' : '#0a0e1a');
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
 }
 function toggleTheme(){
