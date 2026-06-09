@@ -222,19 +222,8 @@
 
     <div class="card">
       <div class="card-h">Налог</div>
-      <div class="grid2">
-        <div class="field"><label>НДФЛ, %</label><input id="ndfl" type="number" inputmode="decimal" value="13"></div>
-        <div class="field"><label>Детей</label>
-          <select id="kids">
-            <option value="0">Нет</option>
-            <option value="1">1 ребёнок</option>
-            <option value="2">2 детей</option>
-            <option value="3">3 детей</option>
-            <option value="4">4 детей</option>
-          </select>
-        </div>
-      </div>
-      <div class="hint" id="kidsHint">в начале года НДФЛ 13 %</div>
+      <div class="field"><label>НДФЛ, %</label><input id="ndfl" type="number" inputmode="decimal" value="13"></div>
+      <div class="hint">в начале года 13 %. Северные надбавки — отдельная льготная шкала.</div>
     </div>
 
     <div class="card">
@@ -255,7 +244,7 @@
         <div class="blk"><b>РК и северная</b> начисляются на базу премии вместе с премией.</div>
         <div class="blk"><b>Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН и НДФЛ на неё не идут.</div>
         <div class="blk"><b>Вахта 400 ₽/день</b> — компенсация, НДФЛ и РК/СН не идут.</div>
-        <div class="blk"><b>НДФЛ</b> = (начислено − вахта − дорога − вычет на детей) × ставку.</div>
+        <div class="blk"><b>НДФЛ</b> = (начислено − вахта − дорога) × ставку.</div>
       </div>
     </div>
     <div class="card">
@@ -280,7 +269,7 @@
     <div class="card">
       <div class="prose">
         <div class="blk"><b>Офлайн.</b> Все расчёты только на этом устройстве, ничего не отправляется в сеть.</div>
-        <div class="blk" style="color:var(--faint)">Версия 10 · производственный календарь 2026</div>
+        <div class="blk" style="color:var(--faint)">Версия 11 · производственный календарь 2026</div>
       </div>
     </div>
     <div class="sign">by <b>Aleksey Kolesnikov</b></div>
@@ -301,12 +290,9 @@ const $ = (id) => document.getElementById(id);
 
 const inputIds = ["normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
-  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl","kids"];
+  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl"];
 
 function num(id){ const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
-
-// Вычет на детей, ₽/мес (НК РФ с 2025): 1-й 1400, 2-й 2800, 3-й и далее 6000
-function kidsDeduction(n){ const per=[1400,2800,6000,6000,6000]; let s=0; for(let i=0;i<n;i++) s+=per[Math.min(i,4)]; return s; }
 function fmt(n){ if(!isFinite(n)||n===0) return "0,00"; return n.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 function calc(){
@@ -325,11 +311,6 @@ function calc(){
   const daysOtpusk = num("daysOtpusk");
   const avgSalary  = num("averageSalary");
   const ndfl = num("ndfl") / 100;
-  const kids = num("kids");
-  const childDed = kidsDeduction(kids);
-  $("kidsHint").textContent = childDed
-    ? `вычет ${childDed.toLocaleString("ru-RU")} ₽/мес — пока доход с начала года < 450 000 ₽`
-    : "в начале года НДФЛ 13 %";
 
   const hourRate = oklad / normMonth;
   const okladFact  = hourRate * hoursWorked;
@@ -353,7 +334,7 @@ function calc(){
   const otpuskSum = avgSalary * daysOtpusk;
 
   const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
-  const ndflBase = Math.max(0, nachisleno - vahtaSum - dorogaSum - childDed);
+  const ndflBase = Math.max(0, nachisleno - vahtaSum - dorogaSum);
   const ndflSum  = ndflBase * ndfl;
   const kVyplate = nachisleno - ndflSum;
 
