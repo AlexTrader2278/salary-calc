@@ -47,9 +47,12 @@
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:11px}
   .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px}
   .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px}
-  .field input{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:11px;
+  .field input, .field select{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:11px;
     color:var(--text); padding:11px 11px; font-size:16px; font-variant-numeric:tabular-nums; outline:none}
-  .field input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accentdim)}
+  .field select{appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%238b97ad' stroke-width='2'><path d='M3 5l4 4 4-4'/></svg>");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px}
+  .field input:focus, .field select:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accentdim)}
   .hint{font-size:11px; color:var(--faint); margin-top:9px; line-height:1.4}
 
   /* надбавка / инфо строки с иконками */
@@ -221,9 +224,17 @@
       <div class="card-h">Налог</div>
       <div class="grid2">
         <div class="field"><label>НДФЛ, %</label><input id="ndfl" type="number" inputmode="decimal" value="13"></div>
-        <div class="field"><label>Вычет на детей, ₽/мес</label><input id="childDed" type="number" inputmode="decimal" value="0"></div>
+        <div class="field"><label>Детей</label>
+          <select id="kids">
+            <option value="0">Нет</option>
+            <option value="1">1 ребёнок</option>
+            <option value="2">2 детей</option>
+            <option value="3">3 детей</option>
+            <option value="4">4 детей</option>
+          </select>
+        </div>
       </div>
-      <div class="hint">в начале года 13 %. 1 реб. 1400, 2-й +2800, 3-й +6000</div>
+      <div class="hint" id="kidsHint">в начале года НДФЛ 13 %</div>
     </div>
 
     <div class="card">
@@ -269,7 +280,7 @@
     <div class="card">
       <div class="prose">
         <div class="blk"><b>Офлайн.</b> Все расчёты только на этом устройстве, ничего не отправляется в сеть.</div>
-        <div class="blk" style="color:var(--faint)">Версия 9 · производственный календарь 2026</div>
+        <div class="blk" style="color:var(--faint)">Версия 10 · производственный календарь 2026</div>
       </div>
     </div>
     <div class="sign">by <b>Aleksey Kolesnikov</b></div>
@@ -290,9 +301,12 @@ const $ = (id) => document.getElementById(id);
 
 const inputIds = ["normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
-  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl","childDed"];
+  "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl","kids"];
 
 function num(id){ const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
+
+// Вычет на детей, ₽/мес (НК РФ с 2025): 1-й 1400, 2-й 2800, 3-й и далее 6000
+function kidsDeduction(n){ const per=[1400,2800,6000,6000,6000]; let s=0; for(let i=0;i<n;i++) s+=per[Math.min(i,4)]; return s; }
 function fmt(n){ if(!isFinite(n)||n===0) return "0,00"; return n.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
 function calc(){
@@ -311,7 +325,11 @@ function calc(){
   const daysOtpusk = num("daysOtpusk");
   const avgSalary  = num("averageSalary");
   const ndfl = num("ndfl") / 100;
-  const childDed = num("childDed");
+  const kids = num("kids");
+  const childDed = kidsDeduction(kids);
+  $("kidsHint").textContent = childDed
+    ? `вычет ${childDed.toLocaleString("ru-RU")} ₽/мес — пока доход с начала года < 450 000 ₽`
+    : "в начале года НДФЛ 13 %";
 
   const hourRate = oklad / normMonth;
   const okladFact  = hourRate * hoursWorked;
