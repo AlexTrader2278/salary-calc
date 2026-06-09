@@ -2,196 +2,286 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Калькулятор зарплаты</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0f1419">
+<meta name="theme-color" content="#0a0e1a">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Зарплата">
 <style>
-  :root {
-    --bg: #0f1419;
-    --panel: #1a212b;
-    --panel-2: #222c38;
-    --line: #2e3a48;
-    --text: #e6edf3;
-    --muted: #8b98a8;
-    --accent: #4ea1ff;
-    --good: #43c98a;
-    --warn: #e0b341;
+  :root{
+    --bg:#0a0e1a; --bg2:#0d1322;
+    --panel:#141a2b; --panel2:#1b2336; --line:#283149;
+    --text:#eaf0f9; --muted:#8b97ad; --faint:#5d6883;
+    --accent:#4e7fff; --accent2:#6d9bff; --accentdim:rgba(78,127,255,.16);
+    --good:#3ddc84; --warn:#f0b740; --bad:#ff6b5a;
+    --r:18px;
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45;
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 0 10px; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
-  .inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
-  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
-  .field input, .field select {
-    width: 100%; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
-    color: var(--text); padding: 9px 10px; font-size: 15px; font-variant-numeric: tabular-nums;
-  }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
-  .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .app{max-width:460px; margin:0 auto; min-height:100vh; position:relative;
+    background:radial-gradient(120% 60% at 50% -10%, #16203a 0%, var(--bg) 55%);
+    padding-bottom:84px;}
+  .screen{display:none; padding:18px 16px 8px; animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-  table.calc { width: 100%; border-collapse: collapse; font-size: 14px; }
-  table.calc td { padding: 7px 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-  table.calc td:last-child { text-align: right; white-space: nowrap; }
-  table.calc tr.sub td { color: var(--muted); font-size: 12px; padding-top: 4px; padding-bottom: 4px; }
-  table.calc tr.sum td { font-weight: 700; color: var(--accent); padding-top: 10px; padding-bottom: 10px; border-top: 1px solid var(--line); border-bottom: none; }
-  table.calc tr.minus td { color: var(--warn); }
-  table.calc tr.total td { font-weight: 700; font-size: 18px; color: var(--good); padding-top: 12px; padding-bottom: 12px; border-top: 2px solid var(--good); border-bottom: none; }
-  table.calc tr.zero td { color: var(--muted); opacity: .55; }
+  /* topbar */
+  .topbar{display:flex; align-items:center; gap:12px; margin-bottom:4px}
+  .topbar .back{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:0 4px 0 0;line-height:1}
+  .topbar h1{font-size:21px; margin:0; font-weight:700; flex:1}
+  .topbar .gear{width:40px;height:40px;border-radius:12px;background:var(--panel);border:1px solid var(--line);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+  .sub{color:var(--muted); font-size:13px; margin:2px 0 18px}
 
-  .ftr { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
-  .sign { text-align: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
-  .sign a, .sign span { color: var(--accent); font-size: 13px; letter-spacing: .08em; font-weight: 600; text-decoration: none; }
-  .sign .by { color: var(--muted); font-weight: 400; letter-spacing: .04em; }
+  /* cards */
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:15px; margin-bottom:14px}
+  .card-h{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:0 0 12px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:11px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px}
+  .field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px}
+  .field input{width:100%; background:var(--panel2); border:1px solid var(--line); border-radius:11px;
+    color:var(--text); padding:11px 11px; font-size:16px; font-variant-numeric:tabular-nums; outline:none}
+  .field input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accentdim)}
+  .hint{font-size:11px; color:var(--faint); margin-top:9px; line-height:1.4}
+
+  /* надбавка / инфо строки с иконками */
+  .nrow{display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--line)}
+  .nrow:first-of-type{border-top:none}
+  .ico{width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+    background:var(--panel2); color:var(--accent2)}
+  .ico svg{width:20px;height:20px}
+  .nrow .nm{flex:1; min-width:0}
+  .nrow .nm b{display:block; font-size:14.5px; font-weight:600}
+  .nrow .nm span{display:block; font-size:11.5px; color:var(--muted)}
+  .nrow .val{color:var(--good); font-weight:700; font-size:14px; white-space:nowrap}
+  .nrow input{width:74px; text-align:right; background:var(--panel2); border:1px solid var(--line);
+    border-radius:10px; color:var(--text); padding:9px 8px; font-size:15px; font-variant-numeric:tabular-nums; outline:none}
+  .nrow input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accentdim)}
+  .nrow .unit{color:var(--muted); font-size:13px; width:14px}
+  .grp-h{font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.07em; margin:14px 0 4px}
+  .grp-h:first-child{margin-top:0}
+
+  /* note box */
+  .note{background:rgba(240,183,64,.08); border:1px solid rgba(240,183,64,.35); border-radius:14px; padding:12px 14px; margin-top:6px}
+  .note b{color:var(--warn); font-size:13px}
+  .note p{margin:5px 0 0; font-size:12.5px; color:var(--muted)}
+
+  /* результат */
+  table.calc{width:100%; border-collapse:collapse; font-size:14px}
+  table.calc td{padding:9px 2px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums}
+  table.calc td:last-child{text-align:right; white-space:nowrap; color:var(--text)}
+  table.calc td:first-child{color:var(--muted)}
+  table.calc tr.sub td{font-size:12px; color:var(--faint); padding:5px 2px}
+  table.calc tr.sum td{font-weight:700; color:var(--accent2); border-bottom:none; padding-top:13px}
+  table.calc tr.sum td:first-child{color:var(--accent2)}
+  table.calc tr.minus td:last-child{color:var(--warn)}
+  table.calc tr.zero{opacity:.4}
+  .payout{margin-top:14px; background:linear-gradient(135deg, rgba(61,220,132,.14), rgba(61,220,132,.05));
+    border:1px solid rgba(61,220,132,.4); border-radius:16px; padding:15px 16px;
+    display:flex; align-items:center; justify-content:space-between}
+  .payout span{font-size:14px; color:var(--good); font-weight:600}
+  .payout b{font-size:24px; color:var(--good); font-weight:800; font-variant-numeric:tabular-nums}
+
+  /* home */
+  .hero{text-align:center; padding:26px 0 8px}
+  .hero .glow{position:relative; width:170px; height:170px; margin:0 auto 8px}
+  .hero .glow::before{content:""; position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle, rgba(78,127,255,.45) 0%, rgba(78,127,255,0) 65%); filter:blur(6px)}
+  .hero .glow svg{position:relative; width:170px; height:170px}
+  .hero h2{font-size:27px; margin:14px 24px 0; font-weight:800; line-height:1.15}
+  .hero .htext{color:var(--muted); font-size:13.5px; margin:10px 26px 0}
+  .feat{margin:24px 4px 0}
+  .feat .frow{display:flex; gap:13px; align-items:flex-start; padding:11px 0}
+  .feat .frow .ico{color:var(--accent2)}
+  .feat .frow b{display:block; font-size:15px; font-weight:600}
+  .feat .frow span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px}
+  .btn{display:block; width:100%; border:none; cursor:pointer; border-radius:15px; padding:16px;
+    font-size:16px; font-weight:700; color:#fff; text-align:center;
+    background:linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow:0 8px 24px rgba(78,127,255,.32)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--panel); color:var(--text); border:1px solid var(--line); box-shadow:none}
+  .home-cta{position:sticky; bottom:96px; margin-top:26px}
+
+  /* help / settings text */
+  .prose{font-size:13.5px; color:var(--muted); line-height:1.6}
+  .prose b{color:var(--text)}
+  .prose .blk{margin-bottom:11px}
+  .set-row{display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); cursor:pointer}
+  .set-row:last-child{border-bottom:none}
+  .set-row .nm{flex:1}
+  .set-row .nm b{display:block;font-size:15px;font-weight:600}
+  .set-row .nm span{display:block;font-size:12px;color:var(--muted)}
+  .set-row .chev{color:var(--faint)}
+  .sign{text-align:center; color:var(--faint); font-size:12px; margin:22px 0 4px; letter-spacing:.04em}
+  .sign b{color:var(--accent2); font-weight:700; letter-spacing:.07em}
+
+  /* tabbar */
+  .tabbar{position:fixed; left:0; right:0; bottom:0; z-index:20;
+    max-width:460px; margin:0 auto; display:flex; background:rgba(13,19,34,.92);
+    backdrop-filter:blur(12px); border-top:1px solid var(--line); padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+  .tab{flex:1; background:none; border:none; cursor:pointer; color:var(--faint);
+    display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; font-size:10.5px}
+  .tab svg{width:22px;height:22px}
+  .tab.active{color:var(--accent2)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Калькулятор зарплаты</h1>
-  <div class="sub">Северная вахта · расчёт по своей расчётке. Все расчёты только на этом устройстве.</div>
+<div class="app">
 
-  <div class="grid">
-    <div>
-      <div class="panel">
-        <h2 style="margin-top:0">Оклад и норма</h2>
-        <div class="inputs">
-          <div class="field">
-            <label>Оклад, руб</label>
-            <input id="oklad" type="number" step="1" placeholder="напр. 36254" />
-          </div>
-          <div class="field">
-            <label>Норма времени, ч/мес</label>
-            <input id="normMonth" type="number" step="0.01" value="164.34" />
-            <div class="hint">поле «Норма времени» в расчётке (≈164,33)</div>
-          </div>
-        </div>
+  <!-- ░░ ГЛАВНАЯ ░░ -->
+  <section class="screen active" id="screen-home">
+    <div class="hero">
+      <div class="glow">
+        <svg viewBox="0 0 120 120" fill="none">
+          <rect x="26" y="14" width="68" height="92" rx="14" fill="#1b2336" stroke="#37456a" stroke-width="2"/>
+          <rect x="36" y="24" width="48" height="22" rx="6" fill="#0d1322"/>
+          <g fill="#4e7fff"><circle cx="42" cy="62" r="5"/><circle cx="60" cy="62" r="5"/><circle cx="78" cy="62" r="5"/>
+          <circle cx="42" cy="80" r="5"/><circle cx="60" cy="80" r="5"/></g>
+          <rect x="73" y="75" width="11" height="24" rx="5" fill="#6d9bff"/>
+          <circle cx="92" cy="34" r="18" fill="#4e7fff"/>
+          <text x="92" y="41" font-size="20" font-weight="800" fill="#0a0e1a" text-anchor="middle" font-family="system-ui">₽</text>
+        </svg>
       </div>
-
-      <h2>Отработанное время</h2>
-      <div class="panel">
-        <div class="inputs">
-          <div class="field">
-            <label>Всего часов отработано</label>
-            <input id="hoursWorked" type="number" step="0.01" />
-            <div class="hint">все часы за месяц (ночные и праздничные тоже сюда входят)</div>
-          </div>
-          <div class="field">
-            <label>В т.ч. ночных часов</label>
-            <input id="hoursNight" type="number" step="0.01" />
-            <div class="hint">часть от «всего», доплата +40 %</div>
-          </div>
-          <div class="field">
-            <label>В т.ч. праздничных (день)</label>
-            <input id="hoursHoliday" type="number" step="0.01" />
-            <div class="hint">часть от «всего», доплата +100 %</div>
-          </div>
-        </div>
-      </div>
-
-      <h2>Надбавки и доплаты</h2>
-      <div class="panel">
-        <div class="inputs">
-          <div class="field">
-            <label>Проф. мастерство, %</label>
-            <input id="pctProfMast" type="number" step="1" value="0" />
-            <div class="hint">0…30</div>
-          </div>
-          <div class="field">
-            <label>Вредность, %</label>
-            <input id="pctVred" type="number" step="1" value="6" />
-            <div class="hint">по СОУТ</div>
-          </div>
-          <div class="field">
-            <label>Ежемесячная премия, %</label>
-            <input id="pctPremia" type="number" step="1" value="30" />
-            <div class="hint">рабочие 30, специалисты 45</div>
-          </div>
-          <div class="field">
-            <label>Районный коэф.</label>
-            <input id="rk" type="number" step="0.01" value="1.7" />
-          </div>
-          <div class="field">
-            <label>Северная надбавка, %</label>
-            <input id="sn" type="number" step="1" value="80" />
-          </div>
-        </div>
-      </div>
-
-      <h2>Вахта, дорога, отпуск</h2>
-      <div class="panel">
-        <div class="inputs">
-          <div class="field">
-            <label>Дней на вахте</label>
-            <input id="daysVahta" type="number" step="1" />
-            <div class="hint">400 руб/день (без НДФЛ)</div>
-          </div>
-          <div class="field">
-            <label>Дней в пути (дорога)</label>
-            <input id="daysDoroga" type="number" step="1" />
-          </div>
-          <div class="field">
-            <label>Дней отпуска</label>
-            <input id="daysOtpusk" type="number" step="1" />
-          </div>
-          <div class="field">
-            <label>Средний заработок (для отпуска)</label>
-            <input id="averageSalary" type="number" step="0.01" placeholder="напр. 6442.24" />
-            <div class="hint">руб/день, из бухпрограммы</div>
-          </div>
-        </div>
-      </div>
-
-      <h2>Налог</h2>
-      <div class="panel">
-        <div class="inputs">
-          <div class="field">
-            <label>НДФЛ, %</label>
-            <input id="ndfl" type="number" step="0.1" value="13" />
-            <div class="hint">в начале года 13 % (северные — отдельная льготная шкала)</div>
-          </div>
-          <div class="field">
-            <label>Вычет на детей, ₽/мес</label>
-            <input id="childDed" type="number" step="1" value="0" />
-            <div class="hint">1 реб. 1400, 2-й 2800, 3-й 6000</div>
-          </div>
-        </div>
-      </div>
+      <h2>Калькулятор зарплаты</h2>
+      <div class="htext">Северная вахта — расчёт по своей расчётке. Всё точно и прозрачно.</div>
     </div>
 
-    <div>
-      <h2 style="margin-top:0">Расчёт</h2>
-      <div class="panel">
-        <table class="calc" id="result"></table>
-      </div>
+    <div class="feat">
+      <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>Актуальные нормы 2026</b><span>Часовая ставка по «Норме времени» из расчётки</span></div></div>
+      <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><div><b>Все надбавки и доплаты</b><span>Районный коэффициент, северная, ночные, вахта</span></div></div>
+      <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><div><b>Просто и офлайн</b><span>Работает на любом устройстве без интернета</span></div></div>
+    </div>
 
-      <h2>Как считается</h2>
-      <div class="panel" style="font-size:13px; color:var(--muted); line-height:1.55">
-        <div><b style="color:var(--text)">Стоимость часа</b> = оклад / норма времени (поле «Норма времени» из расчётки, ≈164,33 ч).</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Районный коэф. и северная надбавка</b> начисляются на базу премии вместе с премией.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН и НДФЛ на неё не идут.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Вахта 400 руб/день</b> — компенсация, НДФЛ и РК/СН не идут.</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">Отпускные</b> = средний заработок × дни (РК/СН уже внутри среднего).</div>
-        <div style="margin-top:8px"><b style="color:var(--text)">НДФЛ</b> = (начислено − вахта − дорога − вычет на детей) × ставку.</div>
+    <div class="home-cta"><button class="btn" onclick="go('calc')">Начать расчёт</button></div>
+    <div class="sign">by <b>Aleksey Kolesnikov</b></div>
+  </section>
+
+  <!-- ░░ РАСЧЁТ ░░ -->
+  <section class="screen" id="screen-calc">
+    <div class="topbar">
+      <h1>Калькулятор зарплаты</h1>
+      <div class="gear" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1 2 2 0 1 1-2.8-2.8 1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.2-2.7 2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 9.7 3.4V3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 20.6 9H21a2 2 0 1 1 0 4h-.4a1.6 1.6 0 0 0-1.2.5z"/></svg></div>
+    </div>
+    <div class="sub">Северная вахта — расчёт по своей расчётке.</div>
+
+    <div class="card">
+      <div class="card-h">Оклад и норма</div>
+      <div class="grid2">
+        <div class="field"><label>Оклад, ₽</label><input id="oklad" type="number" inputmode="decimal" placeholder="напр. 49000"></div>
+        <div class="field"><label>Норма времени, ч/мес</label><input id="normMonth" type="number" inputmode="decimal" value="164.34"></div>
+      </div>
+      <div class="hint">поле «Норма времени» из расчётки (≈164,33)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Отработанное время</div>
+      <div class="grid3">
+        <div class="field"><label>Всего часов</label><input id="hoursWorked" type="number" inputmode="decimal"></div>
+        <div class="field"><label>в т.ч. ночных</label><input id="hoursNight" type="number" inputmode="decimal"></div>
+        <div class="field"><label>в т.ч. праздн.</label><input id="hoursHoliday" type="number" inputmode="decimal"></div>
+      </div>
+      <div class="hint">бери ФАКТ из расчётки. Ночные и праздничные тоже входят в «всего».</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Надбавки и доплаты</div>
+
+      <div class="grp-h">Доплаты к часам</div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span><div class="nm"><b>Ночные часы</b><span>22:00 – 06:00</span></div><div class="val">+40 %</div></div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></span><div class="nm"><b>Праздничные дни</b><span>оплата вдвойне</span></div><div class="val">+100 %</div></div>
+
+      <div class="grp-h">Надбавки</div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div class="nm"><b>Проф. мастерство</b><span>процент от базы</span></div><input id="pctProfMast" type="number" inputmode="decimal" value="0"><span class="unit">%</span></div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 9v5M12 17h.01"/></svg></span><div class="nm"><b>Вредность</b><span>по СОУТ</span></div><input id="pctVred" type="number" inputmode="decimal" value="6"><span class="unit">%</span></div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8S10.5 3 8 4.5 9.5 8 12 8zM12 8s1.5-5 4-3.5S14.5 8 12 8z"/></svg></span><div class="nm"><b>Ежемесячная премия</b><span>рабочие 30, спец. 45</span></div><input id="pctPremia" type="number" inputmode="decimal" value="30"><span class="unit">%</span></div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span><div class="nm"><b>Районный коэффициент</b><span>на базу премии</span></div><input id="rk" type="number" inputmode="decimal" value="1.7"><span class="unit"></span></div>
+      <div class="nrow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg></span><div class="nm"><b>Северная надбавка</b><span>на базу премии</span></div><input id="sn" type="number" inputmode="decimal" value="80"><span class="unit">%</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Вахта, дорога, отпуск</div>
+      <div class="grid2">
+        <div class="field"><label>Дней на вахте</label><input id="daysVahta" type="number" inputmode="decimal"></div>
+        <div class="field"><label>Дней в пути (дорога)</label><input id="daysDoroga" type="number" inputmode="decimal"></div>
+        <div class="field"><label>Дней отпуска</label><input id="daysOtpusk" type="number" inputmode="decimal"></div>
+        <div class="field"><label>Средний (₽/день)</label><input id="averageSalary" type="number" inputmode="decimal" placeholder="для отпуска"></div>
+      </div>
+      <div class="hint">вахта 400 ₽/день и дорога НДФЛ не облагаются</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Налог</div>
+      <div class="grid2">
+        <div class="field"><label>НДФЛ, %</label><input id="ndfl" type="number" inputmode="decimal" value="13"></div>
+        <div class="field"><label>Вычет на детей, ₽/мес</label><input id="childDed" type="number" inputmode="decimal" value="0"></div>
+      </div>
+      <div class="hint">в начале года 13 %. 1 реб. 1400, 2-й +2800, 3-й +6000</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Расчёт</div>
+      <table class="calc" id="result"></table>
+      <div class="payout"><span>К выплате на руки</span><b id="payout">0,00 ₽</b></div>
+    </div>
+  </section>
+
+  <!-- ░░ СПРАВКА ░░ -->
+  <section class="screen" id="screen-help">
+    <div class="topbar"><h1>Справка</h1></div>
+    <div class="card">
+      <div class="card-h">Как считается</div>
+      <div class="prose">
+        <div class="blk"><b>Стоимость часа</b> = оклад / норма времени (поле из расчётки, ≈164,33 ч).</div>
+        <div class="blk"><b>База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
+        <div class="blk"><b>РК и северная</b> начисляются на базу премии вместе с премией.</div>
+        <div class="blk"><b>Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН и НДФЛ на неё не идут.</div>
+        <div class="blk"><b>Вахта 400 ₽/день</b> — компенсация, НДФЛ и РК/СН не идут.</div>
+        <div class="blk"><b>НДФЛ</b> = (начислено − вахта − дорога − вычет на детей) × ставку.</div>
       </div>
     </div>
-  </div>
+    <div class="card">
+      <div class="card-h">Что заполнять</div>
+      <div class="prose">
+        <div class="blk"><b>Оклад</b> и <b>норма времени</b> — из своей расчётки.</div>
+        <div class="blk"><b>Часы</b> — фактически отработанные за месяц (ФАКТ, не план).</div>
+        <div class="blk"><b>Северная %</b> — своя (у новеньких меньше или 0).</div>
+        <div class="blk"><b>Вахта / дорога / отпуск</b> — дни за месяц.</div>
+      </div>
+      <div class="note"><b>Важно</b><p>Калькулятор считает обычную месячную зарплату. Разовые премии (к 23.02, вознаграждение по итогам года) он не считает — в эти месяцы по факту будет больше.</p></div>
+    </div>
+  </section>
 
-  <div class="ftr">оффлайн, ничего не отправляется в сеть · можно сохранить файл и открыть с флешки или с телефона</div>
-  <div class="sign"><span class="by">by</span> <span>Aleksey Kolesnikov</span></div>
+  <!-- ░░ НАСТРОЙКИ ░░ -->
+  <section class="screen" id="screen-settings">
+    <div class="topbar"><h1>Настройки</h1></div>
+    <div class="card">
+      <div class="set-row" onclick="resetData()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span><div class="nm"><b>Сбросить данные</b><span>очистить все поля</span></div><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+      <div class="set-row" onclick="go('help')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg></span><div class="nm"><b>Справка</b><span>как считается зарплата</span></div><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
+    </div>
+    <div class="card">
+      <div class="prose">
+        <div class="blk"><b>Офлайн.</b> Все расчёты только на этом устройстве, ничего не отправляется в сеть.</div>
+        <div class="blk" style="color:var(--faint)">Версия 8 · производственный календарь 2026</div>
+      </div>
+    </div>
+    <div class="sign">by <b>Aleksey Kolesnikov</b></div>
+  </section>
+
+  <!-- ░░ НИЖНЯЯ НАВИГАЦИЯ ░░ -->
+  <nav class="tabbar">
+    <button class="tab active" data-s="home" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Главная</span></button>
+    <button class="tab" data-s="calc" onclick="go('calc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>Расчёт</span></button>
+    <button class="tab" data-s="help" onclick="go('help')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg><span>Справка</span></button>
+    <button class="tab" data-s="settings" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1 2 2 0 1 1-2.8-2.8 1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.2-2.7 2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 9.7 3.4V3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 20.6 9H21a2 2 0 1 1 0 4h-.4a1.6 1.6 0 0 0-1.2.5z"/></svg><span>Настройки</span></button>
+  </nav>
 </div>
 
 <script>
@@ -202,142 +292,100 @@ const inputIds = ["normMonth","oklad","hoursWorked","hoursNight","hoursHoliday",
   "pctProfMast","pctVred","pctPremia","rk","sn",
   "daysVahta","daysDoroga","daysOtpusk","averageSalary","ndfl","childDed"];
 
-function num(id) {
-  const v = parseFloat($(id).value);
-  return isNaN(v) ? 0 : v;
-}
+function num(id){ const v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
+function fmt(n){ if(!isFinite(n)||n===0) return "0,00"; return n.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 
-function fmt(n) {
-  if (!isFinite(n) || n === 0) return "0,00";
-  return n.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function calc() {
+function calc(){
   const oklad = num("oklad");
-  const normMonth = num("normMonth") || 164.34;  // среднемес. норма часов (делитель часовой ставки)
+  const normMonth = num("normMonth") || 164.34;
   const hoursWorked  = num("hoursWorked");
   const hoursNight   = num("hoursNight");
   const hoursHoliday = num("hoursHoliday");
-
   const pctPM = num("pctProfMast");
   const pctVr = num("pctVred");
   const pctPr = num("pctPremia");
-
-  const rk = num("rk");          // 1.7 → коэффициент (доплата 0.7)
-  const sn = num("sn") / 100;    // 80 → 0.8
-
+  const rk = num("rk");
+  const sn = num("sn") / 100;
   const daysVahta  = num("daysVahta");
   const daysDoroga = num("daysDoroga");
   const daysOtpusk = num("daysOtpusk");
   const avgSalary  = num("averageSalary");
-
   const ndfl = num("ndfl") / 100;
-  const childDed = num("childDed");   // вычет на детей, руб/мес
+  const childDed = num("childDed");
 
-  // Стоимость часа = оклад / среднемесячная норма часов (как в расчётке: «Норма времени»)
   const hourRate = oklad / normMonth;
+  const okladFact  = hourRate * hoursWorked;
+  const nightPay   = hourRate * hoursNight * 0.40;
+  const holidayPay = hourRate * hoursHoliday * 1.0;
 
-  const okladFact  = hourRate * hoursWorked;        // оклад за факт. часы
-  const nightPay   = hourRate * hoursNight * 0.40;  // доплата за ночные 40 %
-  const holidayPay = hourRate * hoursHoliday * 1.0; // доплата за праздничные днём 100 %
-
-  // База надбавок (проф. мастерство, вредность)
   const baseNadbavki = okladFact + holidayPay;
   const profMast = baseNadbavki * pctPM / 100;
   const vrednost = baseNadbavki * pctVr / 100;
 
-  // База ежемесячной премии
   const basePremia = okladFact + nightPay + holidayPay + profMast + vrednost;
   const premia = basePremia * pctPr / 100;
 
-  // База РК/СН: премиальная база + премия (компенсация пути сюда НЕ входит)
   const baseRkSn = basePremia + premia;
   const rkSum = baseRkSn * (rk - 1);
   const snSum = baseRkSn * sn;
 
-  // Компенсация пути (дорога): за день = часовая ставка × 8.
-  // РК/СН на неё НЕ начисляется (проверено на фев/апр Хаязова), но НДФЛ облагается.
   const dorogaPerDay = hourRate * 8;
   const dorogaSum = dorogaPerDay * daysDoroga;
-
-  // Вахта — компенсация: без РК/СН и без НДФЛ
   const vahtaSum  = 400 * daysVahta;
-
-  // Отпуск — по среднему заработку (РК/СН уже внутри среднего, повторно не начисляем)
   const otpuskSum = avgSalary * daysOtpusk;
 
-  // Итого начислено
   const nachisleno = baseRkSn + rkSum + snSum + dorogaSum + otpuskSum + vahtaSum;
-
-  // НДФЛ = (начислено − вахта − дорога − вычет на детей) × ставка.
-  // Вахта и компенсация пути НДФЛ не облагаются (проверено на 4 расчётках Хаязова).
   const ndflBase = Math.max(0, nachisleno - vahtaSum - dorogaSum - childDed);
   const ndflSum  = ndflBase * ndfl;
-
   const kVyplate = nachisleno - ndflSum;
 
-  // вывод
   const rows = [];
-  const push = (label, val, cls = "") => rows.push({ label, val, cls });
+  const push = (label, val, cls="") => rows.push({label, val, cls});
+  push("Стоимость часа", `${fmt(hourRate)} ₽`, "sub");
+  push("Оклад за факт. часы", `${fmt(okladFact)} ₽ (${hoursWorked} ч)`);
+  if (hoursNight)   push("Доплата за ночные", fmt(nightPay)+" ₽");
+  if (hoursHoliday) push("Доплата за праздники", fmt(holidayPay)+" ₽");
+  if (profMast)     push(`Проф. мастерство (${pctPM} %)`, fmt(profMast)+" ₽");
+  if (vrednost)     push(`Вредность (${pctVr} %)`, fmt(vrednost)+" ₽");
+  if (premia)       push(`Премия (${pctPr} %)`, fmt(premia)+" ₽");
+  push("База для РК и СН", fmt(baseRkSn)+" ₽", "sum");
+  if (rkSum)        push(`Районный коэффициент (×${rk})`, fmt(rkSum)+" ₽");
+  if (snSum)        push(`Северная надбавка (${(sn*100).toFixed(0)} %)`, fmt(snSum)+" ₽");
+  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн)`, fmt(dorogaSum)+" ₽");
+  if (otpuskSum)    push(`Отпускные (${daysOtpusk} дн)`, fmt(otpuskSum)+" ₽");
+  if (vahtaSum)     push(`Вахтовая надбавка (${daysVahta}×400)`, fmt(vahtaSum)+" ₽");
+  push("Итого начислено", fmt(nachisleno)+" ₽", "sum");
+  push(`НДФЛ (${(ndfl*100).toFixed(1)} %)`, "−"+fmt(ndflSum)+" ₽", "minus");
 
-  push("Стоимость часа", `${fmt(hourRate)} руб`, "sub");
-  push("Оклад за факт. часы", `${fmt(okladFact)}  (${hoursWorked} ч)`);
-  if (hoursNight)   push(`Доплата за ночные (40 %)`, fmt(nightPay));
-  if (hoursHoliday) push(`Доплата за праздн. днём`,  fmt(holidayPay));
-  if (profMast)     push(`Проф. мастерство (${pctPM} %)`, fmt(profMast));
-  if (vrednost)     push(`Вредность (${pctVr} %)`, fmt(vrednost));
-  if (premia)       push(`Ежемесячная премия (${pctPr} %)`, fmt(premia));
-  push("База для РК и СН", fmt(baseRkSn), "sum");
-  if (rkSum)        push(`Районный коэффициент (×${rk})`, fmt(rkSum));
-  if (snSum)        push(`Северная надбавка (${(sn*100).toFixed(0)} %)`, fmt(snSum));
-  if (dorogaSum)    push(`Компенсация пути (${daysDoroga} дн × ${fmt(dorogaPerDay)})`, fmt(dorogaSum));
-  if (otpuskSum)    push(`Отпускные (${daysOtpusk} дн × ${fmt(avgSalary)})`, fmt(otpuskSum));
-  if (vahtaSum)     push(`Надбавка вахтового метода (${daysVahta} × 400)`, fmt(vahtaSum));
-  push("Итого начислено", fmt(nachisleno), "sum");
-  push(`НДФЛ (${(ndfl*100).toFixed(1)} %)`, "−" + fmt(ndflSum), "minus");
-  push("К выплате на руки", fmt(kVyplate), "total");
-
-  $("result").innerHTML = rows.map(r => {
-    const isZero = (typeof r.val === "string" && /^0,00/.test(r.val)) ? " zero" : "";
+  $("result").innerHTML = rows.map(r=>{
+    const isZero = (typeof r.val==="string" && /^0,00/.test(r.val)) ? " zero":"";
     return `<tr class="${r.cls}${isZero}"><td>${r.label}</td><td>${r.val}</td></tr>`;
   }).join("");
+  $("payout").textContent = fmt(kVyplate)+" ₽";
 }
 
-function save() {
-  const data = {};
-  inputIds.forEach(id => { data[id] = $(id).value; });
-  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
-}
+function save(){ const d={}; inputIds.forEach(id=>d[id]=$(id).value); try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){} }
+function load(){ try{ const r=localStorage.getItem(KEY); if(!r)return; const d=JSON.parse(r); inputIds.forEach(id=>{ if(id in d)$(id).value=d[id]; }); }catch(e){} }
+function onAny(){ calc(); save(); }
 
-function load() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    inputIds.forEach(id => { if (id in data) $(id).value = data[id]; });
-  } catch (e) {}
+function go(s){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  $('screen-'+s).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.s===s));
+  window.scrollTo(0,0);
 }
-
-function onAny() {
-  calc();
-  save();
+function resetData(){
+  if(!confirm('Очистить все поля?')) return;
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  location.reload();
 }
 
 // init
-load();
-calc();
+load(); calc();
+inputIds.forEach(id=>{ const el=$(id); el.addEventListener("input",onAny); el.addEventListener("change",onAny); });
 
-inputIds.forEach(id => {
-  const el = $(id);
-  el.addEventListener("input", onAny);
-  el.addEventListener("change", onAny);
-});
-
-// регистрация service worker для офлайна (только по http/https, не file://)
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
-  });
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
 </script>
 </body>
