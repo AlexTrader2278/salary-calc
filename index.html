@@ -17,8 +17,18 @@
     --text:#eaf0f9; --muted:#8b97ad; --faint:#5d6883;
     --accent:#4e7fff; --accent2:#6d9bff; --accentdim:rgba(78,127,255,.16);
     --good:#3ddc84; --warn:#f0b740; --bad:#ff6b5a;
+    --glow:#16203a; --tabbar:rgba(13,19,34,.92); --shadow:rgba(0,0,0,0);
     --r:18px;
   }
+  html[data-theme="light"]{
+    --bg:#eef2f8; --bg2:#e4eaf3;
+    --panel:#ffffff; --panel2:#f3f6fb; --line:#dde3ec;
+    --text:#18212f; --muted:#5c6678; --faint:#9aa4b5;
+    --accent:#3b6fff; --accent2:#2f5fe0; --accentdim:rgba(59,111,255,.12);
+    --good:#15a85b; --warn:#bd821a; --bad:#e0503f;
+    --glow:#dbe6fb; --tabbar:rgba(255,255,255,.9); --shadow:rgba(20,40,90,.06);
+  }
+  .card{box-shadow:0 1px 3px var(--shadow)}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0}
   body{
@@ -27,7 +37,7 @@
     -webkit-font-smoothing:antialiased;
   }
   .app{max-width:460px; margin:0 auto; min-height:100vh; position:relative;
-    background:radial-gradient(120% 60% at 50% -10%, #16203a 0%, var(--bg) 55%);
+    background:radial-gradient(120% 60% at 50% -10%, var(--glow) 0%, var(--bg) 55%);
     padding-bottom:84px;}
   .screen{display:none; padding:18px 16px 8px; animation:fade .25s ease}
   .screen.active{display:block}
@@ -128,7 +138,7 @@
 
   /* tabbar */
   .tabbar{position:fixed; left:0; right:0; bottom:0; z-index:20;
-    max-width:460px; margin:0 auto; display:flex; background:rgba(13,19,34,.92);
+    max-width:460px; margin:0 auto; display:flex; background:var(--tabbar);
     backdrop-filter:blur(12px); border-top:1px solid var(--line); padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
   .tab{flex:1; background:none; border:none; cursor:pointer; color:var(--faint);
     display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 0; font-size:10.5px}
@@ -263,6 +273,7 @@
   <section class="screen" id="screen-settings">
     <div class="topbar"><h1>Настройки</h1></div>
     <div class="card">
+      <div class="set-row" onclick="toggleTheme()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg></span><div class="nm"><b>Тема</b><span id="themeLabel">Тёмная</span></div><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
       <div class="set-row" onclick="resetData()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span><div class="nm"><b>Сбросить данные</b><span>очистить все поля</span></div><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
       <div class="set-row" onclick="go('help')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .8-1 1.7M12 17h.01"/></svg></span><div class="nm"><b>Справка</b><span>как считается зарплата</span></div><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
     </div>
@@ -379,7 +390,21 @@ function resetData(){
   location.reload();
 }
 
+const THEME_KEY = "salary-calc-theme";
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  $('themeLabel').textContent = (t==='light') ? 'Светлая' : 'Тёмная';
+  const meta = document.querySelector('meta[name=theme-color]');
+  if(meta) meta.setAttribute('content', t==='light' ? '#eef2f8' : '#0a0e1a');
+  try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme')==='light' ? 'light' : 'dark';
+  applyTheme(cur==='light' ? 'dark' : 'light');
+}
+
 // init
+applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
 load(); calc();
 inputIds.forEach(id=>{ const el=$(id); el.addEventListener("input",onAny); el.addEventListener("change",onAny); });
 
