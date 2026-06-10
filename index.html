@@ -177,11 +177,11 @@
         </svg>
       </div>
       <h2>Калькулятор зарплаты</h2>
-      <div class="htext">Северная вахта — расчёт по своей расчётке. Всё точно и прозрачно.</div>
+      <div class="htext">Северная вахта — расчёт зарплаты по своему графику. Просто и понятно.</div>
     </div>
 
     <div class="feat">
-      <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>Актуальные нормы 2026</b><span>Часовая ставка по «Норме времени» из расчётки</span></div></div>
+      <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><b>Актуальные нормы 2026</b><span>Часовая ставка по «Норме времени» ≈ 164,33</span></div></div>
       <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><div><b>Все надбавки и доплаты</b><span>Районный коэффициент, северная, ночные, вахта</span></div></div>
       <div class="frow"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><div><b>Просто и офлайн</b><span>Работает на любом устройстве без интернета</span></div></div>
     </div>
@@ -196,7 +196,7 @@
       <h1>Калькулятор зарплаты</h1>
       <div class="gear" onclick="go('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13.5a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1 2 2 0 1 1-2.8-2.8 1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.2-2.7 2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 9.7 3.4V3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 20.6 9H21a2 2 0 1 1 0 4h-.4a1.6 1.6 0 0 0-1.2.5z"/></svg></div>
     </div>
-    <div class="sub">Северная вахта — расчёт по своей расчётке.</div>
+    <div class="sub">Северная вахта — расчёт зарплаты по своему графику.</div>
 
     <div class="card">
       <div class="card-h">Оклад и норма</div>
@@ -204,7 +204,7 @@
         <div class="field"><label>Оклад, ₽</label><input id="oklad" type="number" inputmode="decimal" placeholder="напр. 49000"></div>
         <div class="field"><label>Норма времени, ч/мес</label><input id="normMonth" type="number" inputmode="decimal" value="164.34"></div>
       </div>
-      <div class="hint">поле «Норма времени» из расчётки (≈164,33)</div>
+      <div class="hint">среднемесячная норма ≈164,33 — обычно не меняешь</div>
     </div>
 
     <div class="card">
@@ -214,7 +214,7 @@
         <div class="field"><label>в т.ч. ночных</label><input id="hoursNight" type="number" inputmode="decimal"></div>
         <div class="field"><label>в т.ч. праздн.</label><input id="hoursHoliday" type="number" inputmode="decimal"></div>
       </div>
-      <div class="hint">бери ФАКТ из расчётки. Ночные и праздничные тоже входят в «всего».</div>
+      <div class="hint">часы из своего графика. Ночные и праздничные тоже входят в «всего».</div>
     </div>
 
     <div class="card">
@@ -253,6 +253,7 @@
       <div class="card-h">Расчёт</div>
       <table class="calc" id="result"></table>
       <div class="payout"><span>К выплате на руки</span><b id="payout">0,00 ₽</b></div>
+      <div class="hint" style="text-align:center; margin-top:11px">Прикидка по графику — реальная сумма может чуть отличаться (погрешность по оплаченным часам).</div>
     </div>
   </section>
 
@@ -262,7 +263,7 @@
     <div class="card">
       <div class="card-h">Как считается</div>
       <div class="prose">
-        <div class="blk"><b>Стоимость часа</b> = оклад / норма времени (поле из расчётки, ≈164,33 ч).</div>
+        <div class="blk"><b>Стоимость часа</b> = оклад / норма времени (≈164,33 ч).</div>
         <div class="blk"><b>База премии</b> = оклад за факт. часы + ночные + праздничные + проф. маст. + вредность.</div>
         <div class="blk"><b>РК и северная</b> начисляются на базу премии вместе с премией.</div>
         <div class="blk"><b>Компенсация пути</b> = стоимость часа × 8 за день дороги. РК/СН и НДФЛ на неё не идут.</div>
@@ -273,12 +274,12 @@
     <div class="card">
       <div class="card-h">Что заполнять</div>
       <div class="prose">
-        <div class="blk"><b>Оклад</b> и <b>норма времени</b> — из своей расчётки.</div>
-        <div class="blk"><b>Часы</b> — фактически отработанные за месяц (ФАКТ, не план).</div>
+        <div class="blk"><b>Часы, ночные, праздничные, дни вахты и дороги</b> — из своего графика.</div>
+        <div class="blk"><b>Оклад</b> — свой (постоянный, из трудового договора).</div>
+        <div class="blk"><b>Норма времени</b> ≈ 164,33 — обычно не меняешь.</div>
         <div class="blk"><b>Северная %</b> — своя (у новеньких меньше или 0).</div>
-        <div class="blk"><b>Вахта / дорога / отпуск</b> — дни за месяц.</div>
       </div>
-      <div class="note"><b>Важно</b><p>Калькулятор считает обычную месячную зарплату. Разовые премии (к 23.02, вознаграждение по итогам года) он не считает — в эти месяцы по факту будет больше.</p></div>
+      <div class="note"><b>Это прикидка, не точная сумма</b><p>Калькулятор считает наперёд по графику — расчётка приходит уже после выплаты. Небольшое расхождение с реальной суммой — это нормально: по факту часть оплаченных часов может чуть отличаться от графика. Разовые премии (к 23.02, вознаграждение по итогам года) не считаются — в эти месяцы выйдет больше.</p></div>
     </div>
   </section>
 
